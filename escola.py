@@ -1,14 +1,6 @@
-from cProfile import label
-from cgi import test
-from cgitb import text
-from email import header
-from logging import root
 from tkinter import messagebox
 from tkinter import *
-from turtle import width
-from unicodedata import name
 import pymysql
-from setuptools import Command
 from tkinter import ttk
 import matplotlib.pyplot as plt
 
@@ -103,7 +95,7 @@ class aluno():
 
         try:
             with conexao.cursor() as Cursor:
-                Cursor.execute('select nome, nota1, nota2, nota3, nota4 from aluno where id = %s', (id1))
+                Cursor.execute('select nota1, nota2, nota3, nota4 from aluno where id = %s', (id1))
                 resultados = Cursor.fetchall()
         
         except: 
@@ -392,8 +384,8 @@ class Altenticacao(aluno, professor):
         self.senha.grid(row=2, column=1, padx=5, pady=5)
 
         Label(self.login, text='Informe seu id de aluno').grid(row=3, column=0)
-        self.id = Entry(self.login)
-        self.id.grid(row=3, column=1, padx=5, pady=5)
+        self.usuario_id = Entry(self.login)
+        self.usuario_id.grid(row=3, column=1, padx=5, pady=5)
 
         self.logar = Button(self.login, width=10, bg='#00CED1', text='Logar', command=self.logarAlunoBack).grid(row=4, column=1, padx=5, pady=5)
         self.logar = Button(self.logar)
@@ -501,18 +493,18 @@ class Altenticacao(aluno, professor):
         except:
             print('Não foi possivel conectar-se ao banco de dados')
 
-        global nome
-        nome = self.nome.get()
-        senha = self.senha.get()
-        global id1
-        id1 = int(self.id.get())
-
         try:
             with conexao.cursor() as cursor:
                 cursor.execute('select * from aluno')
                 resultado  = cursor.fetchall()
         except:
             print('Não foi possível fazer a consulta')
+
+        global nome
+        nome = self.nome.get()
+        senha = self.senha.get()
+        global id1
+        id1 = int(self.usuario_id.get())
 
         for linha in resultado:
             if id1 == linha['id'] and nome == linha['nome'] and senha == linha['senha']:
@@ -525,6 +517,4 @@ class Altenticacao(aluno, professor):
             messagebox.showinfo('Aviso', 'Usuário ou senha inválidos')
         else:
             self.alunoFrnt()
-        self.login.destroy()
-
 Altenticacao()
