@@ -6,17 +6,129 @@ from logging import root
 from tkinter import messagebox
 from tkinter import *
 from turtle import width
+from unicodedata import name
 import pymysql
 from setuptools import Command
 from tkinter import ttk
+import matplotlib.pyplot as plt
 
 class aluno():
 
     def alunoFrnt(self):
+        
         self.aluno = Tk()
         self.aluno.title('Aluno')
+        self.aluno.geometry('550x250')
+
+        Label(self.aluno, text='Consulte suas notas').grid(row=0, column=0)
+
+        self.consulta = Button(self.aluno,  bg='#00CED1', text='Consultar', command= self.consultaNota).grid(row=1, column=0, padx=5, pady=5)
+        self.consulta = Button(self.consulta)
+
+        Label(self.aluno, text='Veja seu desempenho\n vizualmente').grid(row=2, column=0)
+
+        self.consulta = Button(self.aluno,  bg='#00CED1', text='Gráfico de notas', command= self.graficos).grid(row=3, column=0, padx=5, pady=5)
+        self.consulta = Button(self.consulta)
+
+        self.tree = ttk.Treeview(self.aluno, selectmode='browse', column=('coluna1', 'coluna2', 'coluna3', 'coluna4'), show='headings')
+
+        self.tree.column('coluna1', width=100, minwidth=500, stretch=NO)
+        self.tree.heading('#1', text='Prmeiro bimestre')
+
+        self.tree.column('coluna2', width=100, minwidth=500, stretch=NO)
+        self.tree.heading('#2', text='Segundo bimestre')
+
+        self.tree.column('coluna3', width=100, minwidth=500, stretch=NO)
+        self.tree.heading('#3', text='Terceiro bimestre')
+
+        self.tree.column('coluna4', width=100, minwidth=500, stretch=NO)
+        self.tree.heading('#4', text='Quarto bimestre')
+
+        self.tree.grid(row=0, column=4, padx=10, pady=10, columnspan=3, rowspan=6)
 
         self.aluno.mainloop()
+
+    def consultaNota(self):
+        try:
+            conexao = pymysql.connect(
+                
+                host='localhost',
+                user='root',
+                password='',
+                db='escola',
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor     
+                
+            )
+        except:
+            print('Não foi possivel conectar-se ao banco de dados')
+
+        try:
+            with conexao.cursor() as Cursor:
+                Cursor.execute('select  nota1, nota2, nota3, nota4 from aluno where id = %s', (id1))
+                resultados = Cursor.fetchall()
+        
+        except: 
+            print('Erro ao fazer a consulta')
+
+        self.tree.delete(*self.tree.get_children())
+
+        linhav = []
+
+        for linha in resultados:
+            linhav.append(linha['nota1'])
+            linhav.append(linha['nota2'])
+            linhav.append(linha['nota3'])
+            linhav.append(linha['nota4'])
+
+            self.tree.insert('', END ,values=linhav, tag='1')
+
+            linhav.clear()
+
+    def graficos(self):
+
+        try:
+            conexao = pymysql.connect(
+                
+                host='localhost',
+                user='root',
+                password='',
+                db='escola',
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor     
+                
+            )
+        except:
+            print('Não foi possivel conectar-se ao banco de dados')
+
+        try:
+            with conexao.cursor() as Cursor:
+                Cursor.execute('select nome, nota1, nota2, nota3, nota4 from aluno where id = %s', (id1))
+                resultados = Cursor.fetchall()
+        
+        except: 
+            print('Erro ao fazer a consulta')
+
+        linhav = []
+
+        for linha in resultados:
+            linhav.append(linha['nota1'])
+            linhav.append(linha['nota2'])
+            linhav.append(linha['nota3'])
+            linhav.append(linha['nota4'])
+            
+        x = linhav
+
+
+        plt.plot(x, label= nome)
+        plt.ylabel('Notas')
+        plt.xlabel('período')
+        plt.title('Relação de desempenho da notas durante o ano')
+        plt.legend()
+
+        plt.show()
+
+        linhav.clear()
 
 class professor():
 
@@ -24,8 +136,8 @@ class professor():
         
         self.professor = Tk()
         self.professor.title('Professor')
-        self.professor.geometry('550x300')
-        Label(self.professor, text='Lançar as notas no sistema').grid(row=0, column=0, columnspan=3)
+        self.professor.geometry('570x300')
+        Label(self.professor, text='Lançar as notas no sistema').grid(row=0, column=0)
 
         Label(self.professor, text='Cadastrar nota 1').grid(row=1, column=0)
         self.nota1 = Entry(self.professor)
@@ -97,6 +209,7 @@ class professor():
             print('Não foi possivel fazer o insert no bd')
 
     def updateBackAnd(self):
+
         try: 
             conexao = pymysql.connect(
                 
@@ -146,7 +259,7 @@ class Altenticacao(aluno, professor):
         self.nome.grid(row=1, column=1, columnspan=2, padx=5 ,  pady=5)
 
         Label(self.root, text='Digite uma senha').grid(row=2, column=0)
-        self.senha = Entry(self.root)
+        self.senha = Entry(self.root, show='*')
         self.senha.grid(row=2, column=1, padx=5, pady=5)
 
         Label(self.root, text='Digite 1 para professor ou 2 para aluno').grid(row=3, column=0, padx=5, pady=5)
@@ -213,7 +326,7 @@ class Altenticacao(aluno, professor):
         self.nome.grid(row=1, column=1, columnspan=2, padx=5 ,  pady=5)
 
         Label(self.login, text='Digite sua senha').grid(row=2, column=0)
-        self.senha = Entry(self.login)
+        self.senha = Entry(self.login, show='*')
         self.senha.grid(row=2, column=1, padx=5, pady=5)
 
         self.logar = Button(self.login, width=10, bg='#FFD700', text='Logar', command=self.logarProfessorBack).grid(row=3, column=1, padx=5, pady=5)
@@ -266,7 +379,7 @@ class Altenticacao(aluno, professor):
         self.root.destroy()
         self.login = Tk()
         self.login.title('teste')
-        self.login.geometry('350x130')
+        self.login.geometry('350x210')
 
         Label(self.login, text='Faça login').grid(row=0, column=0, columnspan=3)
 
@@ -275,13 +388,100 @@ class Altenticacao(aluno, professor):
         self.nome.grid(row=1, column=1, columnspan=2, padx=5 ,  pady=5)
 
         Label(self.login, text='Digite sua senha').grid(row=2, column=0)
-        self.senha = Entry(self.login)
+        self.senha = Entry(self.login,  show='*')
         self.senha.grid(row=2, column=1, padx=5, pady=5)
 
-        self.logar = Button(self.login, width=10, bg='#00CED1', text='Logar', command=self.logarAlunoBack).grid(row=3, column=1, padx=5, pady=5)
+        Label(self.login, text='Informe seu id de aluno').grid(row=3, column=0)
+        self.id = Entry(self.login)
+        self.id.grid(row=3, column=1, padx=5, pady=5)
+
+        self.logar = Button(self.login, width=10, bg='#00CED1', text='Logar', command=self.logarAlunoBack).grid(row=4, column=1, padx=5, pady=5)
         self.logar = Button(self.logar)
 
+        Label(self.login, text='Não sabe seu id?').grid(row=5, column=0)
+
+        self.consultaID = Button(self.login,  bg='#00CED1', text='Visualize seu id ', command=self.consultaID_Front).grid(row=6, column=0, padx=5, pady=5)
+        self.consultaID = Button(self.consultaID) 
+
+        self.logar.destroy() 
+
         self.login.mainloop()
+
+    def consultaID_Front(self):
+        self.id = Tk()
+        self.id.title('teste')
+        self.id.geometry('400x250')
+
+        Label(self.id, text='Verifique seu id').grid(row=0, column=0)
+
+        Label(self.id, text='Digite seu nome de usuario').grid(row=1, column=0)
+        self.nomeid = Entry(self.id)
+        self.nomeid.grid(row=1, column=1, columnspan=2, padx=5 ,  pady=5)
+
+        Label(self.id, text='Digite sua senha').grid(row=2, column=0)
+        self.senhaid = Entry(self.id, show='*')
+        self.senhaid.grid(row=2, column=1, padx=5, pady=5)
+
+        self.verificaId = Button(self.id,  bg='#00CED1', text='Visualize seu id ', command=self.consultaID_Back).grid(row=3, column=1, padx=5, pady=5)
+        self.verificaId = Button(self.verificaId) 
+
+        self.tree = ttk.Treeview(self.id, selectmode='browse', column=('coluna1'), show='headings')
+
+        self.tree.column('coluna1', width=70, minwidth=1, stretch=NO)
+        self.tree.heading('#1', text='Id do aluno')
+
+        self.tree.grid(row=0, column=3, padx=10, pady=10, columnspan=3, rowspan=6)
+
+        self.id.mainloop()
+
+    def consultaID_Back(self):
+        try:
+            conexao = pymysql.connect(
+                
+                host='localhost',
+                user='root',
+                password='',
+                db='escola',
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor     
+                
+            )
+        except:
+            print('Não foi possivel conectar-se ao banco de dados')
+
+        nome = self.nomeid.get()
+        senha = self.senhaid.get()
+
+        try:
+            with conexao.cursor() as cursor:
+                cursor.execute('select * from aluno')
+                resultado  = cursor.fetchall()
+        except:
+            print('Não foi possível fazer a consulta')
+
+        for linha in resultado:
+            if nome == linha['nome'] and senha == linha['senha']:
+                x = nome
+
+                try:
+                    with conexao.cursor() as cursor:
+                        cursor.execute("select id from aluno where nome = %s", (x))
+                        resultado2  = cursor.fetchall()
+                except:
+                    print('Não foi possível fazer a consulta')
+
+                self.tree.delete(*self.tree.get_children())
+                
+                linhav = []
+                
+                for linha in resultado2:
+                    linhav.append(linha['id'])
+
+
+                self.tree.insert('', END ,values=linhav, iid=linha['id'],  tag='1')
+
+
+                linhav.clear()
 
     def logarAlunoBack(self):
 
@@ -301,8 +501,11 @@ class Altenticacao(aluno, professor):
         except:
             print('Não foi possivel conectar-se ao banco de dados')
 
+        global nome
         nome = self.nome.get()
         senha = self.senha.get()
+        global id1
+        id1 = int(self.id.get())
 
         try:
             with conexao.cursor() as cursor:
@@ -312,7 +515,7 @@ class Altenticacao(aluno, professor):
             print('Não foi possível fazer a consulta')
 
         for linha in resultado:
-            if nome == linha['nome'] and senha == linha['senha']:
+            if id1 == linha['id'] and nome == linha['nome'] and senha == linha['senha']:
                 autenticado = True
                 break
             else:
@@ -322,5 +525,6 @@ class Altenticacao(aluno, professor):
             messagebox.showinfo('Aviso', 'Usuário ou senha inválidos')
         else:
             self.alunoFrnt()
+        self.login.destroy()
 
 Altenticacao()
